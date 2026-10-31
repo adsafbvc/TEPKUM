@@ -1,0 +1,36 @@
+name: Localize TEPKUM site assets
+
+on:
+  push:
+    paths:
+      - '.github/workflows/localize-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  localize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Switch grant logos to local assets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('https://raw.githubusercontent.com/adsafbvc/ADDCRAFT/main/assets/fsi-logo.png', 'assets/fsi-logo.svg')
+          s = s.replace('https://raw.githubusercontent.com/adsafbvc/ADDCRAFT/main/assets/platform-logo.png', 'assets/platform-logo.png')
+          s = s.replace('<div class="visual-note note-a">Накопление тепловой энергии</div>', '<div class="visual-note note-a">Схематичное изображение · накопление тепловой энергии</div>')
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'Use local grant logos and clarify product visual'
+          git push

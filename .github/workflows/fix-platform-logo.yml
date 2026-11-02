@@ -1,0 +1,32 @@
+name: Fix platform logo
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-platform-logo.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace platform logo with working source
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          curl -fL --retry 3 'https://raw.githubusercontent.com/adsafbvc/ADDCRAFT/main/assets/platform-logo.png' -o assets/platform-logo.png
+          file assets/platform-logo.png
+          test "$(wc -c < assets/platform-logo.png)" -gt 5000
+      - name: Commit fixed logo
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/platform-logo.png
+          git diff --cached --quiet && exit 0
+          git commit -m 'Fix platform logo asset'
+          git push
